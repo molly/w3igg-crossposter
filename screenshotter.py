@@ -45,7 +45,7 @@ def get_screenshot(id):
     """Load the page and capture a screenshot of the post with the specified ID. If the screenshot is overly long, split
     it into two or three segments at paragraph breaks."""
     driver = get_driver()
-    path = "../entry.png"
+    path = "./entry.png"
 
     entry = get_entry(driver, id)
     if entry is None:
@@ -80,11 +80,11 @@ def get_screenshot(id):
         entry.screenshot(path)
 
         # TODO: Actually split image into segments -- this just draws the lines where the splits will go
-        with Image.open("../entry.png") as image:
+        with Image.open(path) as image:
             for h in splits:
                 canvas = ImageDraw.Draw(image)
                 canvas.line([(0, h), (2400, h)], fill=128, width=1)
-            image.save("./entry.png", "PNG")
+            image.save(path, "PNG")
 
     driver.quit()
 
