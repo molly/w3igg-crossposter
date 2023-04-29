@@ -35,22 +35,25 @@ if __name__ == "__main__":
     driver = get_driver()
     entry = get_entry(driver, args.entry_id)
     if entry is not None:
-        entry_details = get_entry_details(entry)
-        num_screenshots = get_screenshot(entry)
+        screenshot_splits = get_screenshot(entry)
+        num_screenshots = len(screenshot_splits)
+        entry_details = get_entry_details(entry, screenshot_splits)
 
-    post_text = f"{entry_details.title}\n\n{entry_details.date}\n{entry_details.url}"
+        post_text = (
+            f"{entry_details.title}\n\n{entry_details.date}\n{entry_details.url}"
+        )
 
-    if args.no_confirm:
-        confirm = True
-    else:
-        confirm = False
-        # Open output directory to confirm images
-        subprocess.call(["open", "-R", OUTPUT_DIR])
-        print(post_text)
-        confirm = input("Ready to post? [y/n] ").lower()
-        confirm = True if confirm == "y" else False
+        if args.no_confirm:
+            confirm = True
+        else:
+            confirm = False
+            # Open output directory to confirm images
+            subprocess.call(["open", "-R", OUTPUT_DIR])
+            print(post_text)
+            confirm = input("Ready to post? [y/n] ").lower()
+            confirm = True if confirm == "y" else False
 
-    if confirm:
-        send_tweet(post_text, num_screenshots)
+        if confirm:
+            send_tweet(post_text, num_screenshots, entry_details)
 
     driver.quit()

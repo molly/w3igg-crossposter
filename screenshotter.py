@@ -16,7 +16,7 @@ def get_screenshot(entry):
         entry: WebElement to capture
 
     Returns:
-         Integer number of segments captured.
+         Array with split information (y coordinate of split, and number of paragraphs included in each split).
     """
 
     image_bottom = None
@@ -57,18 +57,18 @@ def get_screenshot(entry):
         )
         entry_with_margin.paste(image, (MARGIN, MARGIN))
 
-    if len(splits):
-        splits.append(entry_with_margin.height)
+    splits.append({"y": entry_with_margin.height})
+    if len(splits) > 1:
         last_crop = 0
         for ind, split in enumerate(splits):
             filename = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
             cp = entry_with_margin.copy()
-            cp = cp.crop((0, last_crop, entry_with_margin.width, split + 20))
+            cp = cp.crop((0, last_crop, entry_with_margin.width, split["y"] + 20))
             cp.save(filename)
-            last_crop = split
+            last_crop = split["y"]
     else:
         entry_with_margin.save(os.path.join(OUTPUT_DIR, FILENAME_ROOT + "0.png"))
 
-    os.remove(screenshot_path)  # Clean up intermediate file
+    os.remove(screenshot_path)  # Clean up intermediate file that's not needed anymore
 
-    return len(splits) or 1
+    return splits
