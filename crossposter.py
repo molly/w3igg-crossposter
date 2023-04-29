@@ -39,9 +39,7 @@ if __name__ == "__main__":
         num_screenshots = len(screenshot_splits)
         entry_details = get_entry_details(entry, screenshot_splits)
 
-        post_text = (
-            f"{entry_details.title}\n\n{entry_details.date}\n{entry_details.url}"
-        )
+        post_text = f"{entry_details['title']}\n\n{entry_details['date']}\n{entry_details['url']}"
 
         if args.no_confirm:
             confirm = True
@@ -49,11 +47,13 @@ if __name__ == "__main__":
             confirm = False
             # Open output directory to confirm images
             subprocess.call(["open", "-R", OUTPUT_DIR])
-            print(post_text)
+            print("=" * 20 + "\n" + post_text + "\n" + "=" * 20 + "\n\n")
             confirm = input("Ready to post? [y/n] ").lower()
             confirm = True if confirm == "y" else False
 
         if confirm:
             send_tweet(post_text, num_screenshots, entry_details)
+        else:
+            print("Exiting without posting.")
 
     driver.quit()
