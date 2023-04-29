@@ -1,7 +1,10 @@
 from constants import *
 from entry import get_driver, get_entry, get_entry_details
 from screenshotter import get_screenshot
+
+from toot import send_toot
 from tweet import send_tweet
+from skeet import send_skeet
 
 import argparse
 import os.path
@@ -28,6 +31,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Send posts without prompting to confirm",
     )
+
+    # Option to only post to one of the services
+    service_group = parser.add_mutually_exclusive_group()
+    service_group.add_argument("--tweet", action="store_true")
+    service_group.add_argument("--toot", action="store_true")
+    service_group.add_argument("--skeet", action="store_true")
     args = parser.parse_args()
 
     cleanup()
@@ -52,7 +61,15 @@ if __name__ == "__main__":
             confirm = True if confirm == "y" else False
 
         if confirm:
-            send_tweet(post_text, num_screenshots, entry_details)
+            if args.tweet:
+                send_tweet(post_text, num_screenshots, entry_details)
+            elif args.toot:
+                send_toot(post_text, num_screenshots, entry_details)
+            elif args.skeet:
+                send_skeet(post_text, num_screenshots, entry_details)
+            else:
+                send_tweet(post_text, num_screenshots, entry_details)
+                send_toot(post_text, num_screenshots, entry_details)
         else:
             print("Exiting without posting.")
 

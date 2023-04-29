@@ -163,3 +163,4 @@ cython_debug/
 .idea/
 out/
 secrets.py
+*.secret

@@ -8,7 +8,8 @@ def authenticate():
     """
     Authenticate to Twitter.
 
-    Returns: Tuple containing the Client (for posting tweet) and the API (for v1.1 media upload endpoint)
+    Returns:
+        Tuple containing the Client (for posting tweet) and the API (for v1.1 media upload endpoint)
     """
     client = tweepy.Client(
         consumer_key=TWITTER_API_KEY,
@@ -40,9 +41,8 @@ def send_tweet(post_text, num_screenshots, entry_details):
     """
     (client, api) = authenticate()
 
-    media_ids = []
-
     # Upload screenshots
+    media_ids = []
     for ind in range(num_screenshots):
         resp = api.media_upload(
             os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
