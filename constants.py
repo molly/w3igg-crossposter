@@ -9,3 +9,10 @@ MARGIN = 25
 
 # Twitter
 TWITTER_ALT_TEXT_LIMIT = 1000
+
+# Mastodon
+MASTODON_ALT_TEXT_LIMIT = 1500
+
+# Bluesky
+BLUESKY_BASE_URL = "https://bsky.social/xrpc"
+BLUESKY_ALT_TEXT_LIMIT = 1000

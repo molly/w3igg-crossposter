@@ -7,7 +7,7 @@ from mastodon import Mastodon
 
 def authenticate():
     """
-    Authenticate to Twitter.
+    Authenticate to Mastodon.
 
     Returns:
         Authenticated Mastodon client.
@@ -41,7 +41,7 @@ def send_toot(post_text, num_screenshots, entry_details):
 
         resp = api.media_post(
             os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png"),
-            description=alt_text,
+            description=alt_text[:MASTODON_ALT_TEXT_LIMIT],
             focus=(0, -1),  # Set focus to center top of post
         )
         media_ids.append(resp.id)
