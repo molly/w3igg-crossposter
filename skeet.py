@@ -36,6 +36,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
     # Upload screenshots
     blobs = []
     for ind in range(num_screenshots):
+        print(f"Uploading Bluesky image {ind}")
         with open(
             os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png"), "rb"
         ) as image_file:
@@ -60,6 +61,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
             alt_text = entry_details["title"] + "\n" + alt_text
         images.append({"image": blob, "alt": alt_text[:BLUESKY_ALT_TEXT_LIMIT]})
 
+    post_text_bytes = bytes(post_text, "utf-8")
     post_data = {
         "repo": did,
         "collection": "app.bsky.feed.post",
@@ -77,17 +79,18 @@ def send_skeet(post_text, num_screenshots, entry_details):
                         }
                     ],
                     "index": {
-                        "byteStart": post_text.find("https://"),
-                        "byteEnd": len(post_text),
+                        "byteStart": post_text_bytes.find(bytes("https://", "utf-8")),
+                        "byteEnd": len(post_text_bytes),
                     },
                 }
             ],
         },
     }
 
+    print("Sending skeet")
     resp = requests.post(
         BLUESKY_BASE_URL + "/com.atproto.repo.createRecord",
         json=post_data,
         headers=headers,
     )
-    print(resp)
+    return resp.json()["uri"].split("/")[-1]

@@ -1,3 +1,6 @@
+from constants import MARGIN
+
+
 def calculate_optimal_segments(entry_height, possible_splits, num_segments):
     """Return an array of locations at which to split the image to achieve the target number of segments.
 
@@ -21,9 +24,9 @@ def calculate_optimal_segments(entry_height, possible_splits, num_segments):
         if last < target < current:
             # Choose the split that's closest to the target
             if last != 0 and abs(target - last) < abs(target - current):
-                segments.append({"y": last, "paragraphs": paragraph_count})
+                segments.append({"y": last + MARGIN, "paragraphs": paragraph_count})
             else:
-                segments.append({"y": current, "paragraphs": paragraph_count})
+                segments.append({"y": current + MARGIN, "paragraphs": paragraph_count})
             if len(segments) == num_segments - 1:
                 break
             paragraph_count = 0

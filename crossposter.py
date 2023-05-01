@@ -1,6 +1,7 @@
 from constants import *
 from entry import get_driver, get_entry, get_entry_details
 from screenshotter import get_screenshot
+from update_entry import update_entry_with_social_ids
 
 from toot import send_toot
 from tweet import send_tweet
@@ -12,6 +13,7 @@ import subprocess
 
 
 def cleanup():
+    """Clean up output directory before run, or create it if it doesn't exist."""
     if os.path.exists(OUTPUT_DIR):
         # Erase all files in the output directory from last run
         for f in os.listdir(OUTPUT_DIR):
@@ -25,7 +27,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Crosspost a Web3 is Going Just Great entry to social media."
     )
-    parser.add_argument("entry_id")
+    parser.add_argument("entry_id", help="ID of the W3IGG entry, in numerical format.")
     parser.add_argument(
         "--no-confirm",
         action="store_true",
@@ -51,6 +53,7 @@ if __name__ == "__main__":
         post_text = f"{entry_details['title']}\n\n{entry_details['date']}\n{entry_details['url']}"
 
         if args.no_confirm:
+            print("Skipping confirmation step.")
             confirm = True
         else:
             confirm = False
@@ -61,16 +64,36 @@ if __name__ == "__main__":
             confirm = True if confirm == "y" else False
 
         if confirm:
+            post_ids = {}
             if args.tweet:
-                send_tweet(post_text, num_screenshots, entry_details)
+                post_ids["twitter"] = send_tweet(
+                    post_text, num_screenshots, entry_details
+                )
             elif args.toot:
-                send_toot(post_text, num_screenshots, entry_details)
+                post_ids["mastodon"] = send_toot(
+                    post_text, num_screenshots, entry_details
+                )
             elif args.skeet:
-                send_skeet(post_text, num_screenshots, entry_details)
+                post_ids["bluesky"] = send_skeet(
+                    post_text, num_screenshots, entry_details
+                )
             else:
-                send_tweet(post_text, num_screenshots, entry_details)
-                send_toot(post_text, num_screenshots, entry_details)
+                post_ids["twitter"] = send_tweet(
+                    post_text, num_screenshots, entry_details
+                )
+                post_ids["mastodon"] = send_toot(
+                    post_text, num_screenshots, entry_details
+                )
+                post_ids["bluesky"] = send_skeet(
+                    post_text, num_screenshots, entry_details
+                )
+
+            result = update_entry_with_social_ids(args.entry_id, post_ids)
+            print("Entry updated:")
+            print(result)
         else:
             print("Exiting without posting.")
+    else:
+        print(f"Entry with ID {args.entry_id} not found.")
 
     driver.quit()

@@ -34,6 +34,7 @@ def send_toot(post_text, num_screenshots, entry_details):
     # Upload screenshots
     media_ids = []
     for ind in range(num_screenshots):
+        print(f"Uploading Mastodon image {ind}")
         # Get alt text for this image
         alt_text = entry_details["entry_text"][ind]
         if ind == 0:
@@ -47,5 +48,6 @@ def send_toot(post_text, num_screenshots, entry_details):
         media_ids.append(resp.id)
 
     # Send tweet
+    print("Sending toot.")
     toot = api.status_post(post_text, media_ids=media_ids)
     return toot["id"]

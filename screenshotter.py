@@ -21,6 +21,7 @@ def get_screenshot(entry):
 
     image_bottom = None
     splits = []
+    num_segments = None
     if entry.size["height"] > MAX_IMAGE_HEIGHT:
         # This is a tall entry that we'll want to split into multiple screenshots
         num_segments = 3 if entry.size["height"] > (MAX_IMAGE_HEIGHT * 2) else 2
@@ -46,6 +47,7 @@ def get_screenshot(entry):
         )
 
     # Grab screenshot
+    print("Capturing screenshot")
     screenshot_path = os.path.join(OUTPUT_DIR, "screenshot.png")
     entry.screenshot(screenshot_path)
 
@@ -59,11 +61,12 @@ def get_screenshot(entry):
 
     splits.append({"y": entry_with_margin.height})
     if len(splits) > 1:
+        print(f"Splitting screenshot into target {num_segments} segments.")
         last_crop = 0
         for ind, split in enumerate(splits):
             filename = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
             cp = entry_with_margin.copy()
-            cp = cp.crop((0, last_crop, entry_with_margin.width, split["y"] + 20))
+            cp = cp.crop((0, last_crop, entry_with_margin.width, split["y"]))
             cp.save(filename)
             last_crop = split["y"]
     else:

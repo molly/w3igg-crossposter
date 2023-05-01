@@ -44,6 +44,7 @@ def send_tweet(post_text, num_screenshots, entry_details):
     # Upload screenshots
     media_ids = []
     for ind in range(num_screenshots):
+        print(f"Uploading Twitter image {ind}")
         resp = api.media_upload(
             os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
         )
@@ -57,5 +58,6 @@ def send_tweet(post_text, num_screenshots, entry_details):
         media_ids.append(resp.media_id)
 
     # Send tweet
+    print("Sending tweet")
     tweet = client.create_tweet(text=post_text, user_auth=True, media_ids=media_ids)
     return tweet.data["id"]
