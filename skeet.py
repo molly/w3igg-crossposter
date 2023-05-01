@@ -71,22 +71,20 @@ def send_skeet(post_text, num_screenshots, entry_details):
 
     # Create rich text information to turn the W3IGG URL into a clickable link
     post_text_bytes = bytes(post_text, "utf-8")
-    facets = (
-        [
-            {
-                "features": [
-                    {
-                        "uri": entry_details["url"],
-                        "$type": "app.bsky.richtext.facet#link",
-                    }
-                ],
-                "index": {
-                    "byteStart": post_text_bytes.find(bytes("https://", "utf-8")),
-                    "byteEnd": len(post_text_bytes),
-                },
-            }
-        ],
-    )
+    facets = [
+        {
+            "features": [
+                {
+                    "uri": entry_details["url"],
+                    "$type": "app.bsky.richtext.facet#link",
+                }
+            ],
+            "index": {
+                "byteStart": post_text_bytes.find(bytes("https://", "utf-8")),
+                "byteEnd": len(post_text_bytes),
+            },
+        }
+    ]
 
     post_data = {
         "repo": did,
