@@ -7,6 +7,13 @@ import os
 
 
 def authenticate():
+    """
+    Authenticate user with BlueSky identifier and password (password can be an app password).
+
+    Returns:
+        Tuple containing the JWT and DID. Note the JWT is short-lived and this script has no refresh functionality --
+        that would need to be added if this was a persistent process rather than a one-off call.
+    """
     resp = requests.post(
         BLUESKY_BASE_URL + "/com.atproto.server.createSession",
         json={"identifier": BLUESKY_USERNAME, "password": BLUESKY_PASSWORD},
@@ -54,6 +61,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
         iso_timestamp[:-6] + "Z"
     )  # bsky uses Z format, so trim off +00:00 and add Z
 
+    # Hydrate screenshot images with alt text
     images = []
     for ind, blob in enumerate(blobs):
         alt_text = entry_details["entry_text"][ind]
@@ -61,7 +69,25 @@ def send_skeet(post_text, num_screenshots, entry_details):
             alt_text = entry_details["title"] + "\n" + alt_text
         images.append({"image": blob, "alt": alt_text[:BLUESKY_ALT_TEXT_LIMIT]})
 
+    # Create rich text information to turn the W3IGG URL into a clickable link
     post_text_bytes = bytes(post_text, "utf-8")
+    facets = (
+        [
+            {
+                "features": [
+                    {
+                        "uri": entry_details["url"],
+                        "$type": "app.bsky.richtext.facet#link",
+                    }
+                ],
+                "index": {
+                    "byteStart": post_text_bytes.find(bytes("https://", "utf-8")),
+                    "byteEnd": len(post_text_bytes),
+                },
+            }
+        ],
+    )
+
     post_data = {
         "repo": did,
         "collection": "app.bsky.feed.post",
@@ -70,20 +96,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
             "text": post_text,
             "createdAt": iso_timestamp,
             "embed": {"$type": "app.bsky.embed.images", "images": images},
-            "facets": [
-                {
-                    "features": [
-                        {
-                            "uri": entry_details["url"],
-                            "$type": "app.bsky.richtext.facet#link",
-                        }
-                    ],
-                    "index": {
-                        "byteStart": post_text_bytes.find(bytes("https://", "utf-8")),
-                        "byteEnd": len(post_text_bytes),
-                    },
-                }
-            ],
+            "facets": facets,
         },
     }
 
@@ -93,4 +106,6 @@ def send_skeet(post_text, num_screenshots, entry_details):
         json=post_data,
         headers=headers,
     )
+
+    # Grab just the post ID without the full URI
     return resp.json()["uri"].split("/")[-1]
