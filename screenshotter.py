@@ -2,6 +2,7 @@ from constants import *
 from image_size import calculate_optimal_segments
 
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 from PIL import Image
 
@@ -27,11 +28,14 @@ def get_screenshot(entry):
         num_segments = 3 if entry.size["height"] > (MAX_IMAGE_HEIGHT * 2) else 2
 
         # Avoid splitting through an image if there is one
-        image = entry.find_element(By.CLASS_NAME, "captioned-image")
-        if image:
-            image_bottom = (
-                image.rect["y"] + image.rect["height"] - entry.location["y"]
-            ) * SCALING_FACTOR
+        try:
+            image = entry.find_element(By.CLASS_NAME, "captioned-image")
+            if image:
+                image_bottom = (
+                    image.rect["y"] + image.rect["height"] - entry.location["y"]
+                ) * SCALING_FACTOR
+        except NoSuchElementException:
+            pass
 
         # Get array of possible split coordinates (top of each <p>)
         paragraphs = entry.find_elements(By.TAG_NAME, "p")
