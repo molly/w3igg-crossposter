@@ -84,19 +84,16 @@ def get_entry_details(entry, splits):
         paragraph_counter = 1
         segment_counter = 0
         for paragraph in paragraphs:
-            if (
-                "paragraphs"
-                not in splits[
-                    segment_counter
-                ]  # Last segment doesn't have this key, so just loop til done
-                or splits[segment_counter]["paragraphs"] == paragraph_counter
-            ):
-                # This segment is finished, start the next
-                paragraph_counter = 1
-                segment_counter += 1
-                entry_text.append("")
             entry_text[-1] = entry_text[-1] + paragraph.text + " "
             paragraph_counter += 1
+            if (
+                "paragraphs" in splits[segment_counter]
+                and splits[segment_counter]["paragraphs"] == paragraph_counter
+            ):
+                # This segment is finished, start the next
+                paragraph_counter = 0
+                segment_counter += 1
+                entry_text.append("")
 
     details = {"title": title, "date": date, "url": url, "entry_text": entry_text}
     return details
