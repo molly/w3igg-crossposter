@@ -84,8 +84,6 @@ def get_entry_details(entry, splits):
         paragraph_counter = 1
         segment_counter = 0
         for paragraph in paragraphs:
-            entry_text[-1] = entry_text[-1] + paragraph.text + " "
-            paragraph_counter += 1
             if (
                 "paragraphs" in splits[segment_counter]
                 and splits[segment_counter]["paragraphs"] == paragraph_counter
@@ -94,6 +92,8 @@ def get_entry_details(entry, splits):
                 paragraph_counter = 0
                 segment_counter += 1
                 entry_text.append("")
+            entry_text[-1] = entry_text[-1] + paragraph.text + " "
+            paragraph_counter += 1
 
     details = {"title": title, "date": date, "url": url, "entry_text": entry_text}
     return details
