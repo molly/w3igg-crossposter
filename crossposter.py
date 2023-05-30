@@ -8,8 +8,11 @@ from tweet import send_tweet
 from skeet import send_skeet
 
 import argparse
+import json
 import os.path
 import subprocess
+
+ANSI = {"GREEN": "\033[92m", "YELLOW": "\033[93m", "ENDC": "\033[0m"}
 
 
 def cleanup():
@@ -23,6 +26,36 @@ def cleanup():
         os.mkdir(OUTPUT_DIR)
 
 
+def make_posts(post_text, num_screenshots, entry_details):
+    post_ids = {}
+
+    if args.tweet:
+        post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
+    elif args.toot:
+        post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
+    elif args.skeet:
+        post_ids["bluesky"] = send_skeet(post_text, num_screenshots, entry_details)
+    else:
+        post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
+        post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
+        post_ids["bluesky"] = send_skeet(post_text, num_screenshots, entry_details)
+
+    return post_ids
+
+
+def print_results(results):
+    if results["error"]:
+        print("⚠️ Posted with errors:")
+    else:
+        print("✅ Posted without errors:")
+
+    for service in SERVICES:
+        if results[service] == "Success":
+            print("✅ " + service)
+        else:
+            print("⚠️" + results["service"])
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Crosspost a Web3 is Going Just Great entry to social media."
@@ -33,6 +66,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Send posts without prompting to confirm",
     )
+    parser.add_argument(
+        "--use-prev",
+        action="store_true",
+        help="Use screenshots and post information from previous run without re-fetching",
+    )
 
     # Option to only post to one of the services
     service_group = parser.add_mutually_exclusive_group()
@@ -41,15 +79,37 @@ if __name__ == "__main__":
     service_group.add_argument("--skeet", action="store_true")
     args = parser.parse_args()
 
-    cleanup()
+    num_screenshots = None
+    entry_details = None
+    driver = None
 
-    driver = get_driver()
-    entry = get_entry(driver, args.entry_id)
-    if entry is not None:
-        screenshot_splits = get_screenshot(entry)
-        num_screenshots = len(screenshot_splits)
-        entry_details = get_entry_details(entry, screenshot_splits)
+    if not args.use_prev:
+        # Clear out output directory and fetch new data and screenshots
+        cleanup()
 
+        driver = get_driver()
+        entry = get_entry(driver, args.entry_id)
+
+        if entry is not None:
+            screenshot_splits = get_screenshot(entry)
+            num_screenshots = len(screenshot_splits)
+            entry_details = get_entry_details(entry, screenshot_splits)
+            with open(os.path.join(OUTPUT_DIR, "entry.json"), "w+") as json_file:
+                json.dump(
+                    {
+                        "num_screenshots": num_screenshots,
+                        "entry_details": entry_details,
+                    },
+                    json_file,
+                )
+    else:
+        # Use existing stored data and screenshots without fetch
+        with open(os.path.join(OUTPUT_DIR, "entry.json"), "r") as json_file:
+            stored = json.load(json_file)
+            num_screenshots = stored["num_screenshots"]
+            entry_details = stored["entry_details"]
+
+    if entry_details:
         post_text = f"{entry_details['title']}\n\n{entry_details['date']}\n{entry_details['url']}"
 
         if args.no_confirm:
@@ -64,33 +124,9 @@ if __name__ == "__main__":
             confirm = True if confirm == "y" else False
 
         if confirm:
-            post_ids = {}
-            if args.tweet:
-                post_ids["twitter"] = send_tweet(
-                    post_text, num_screenshots, entry_details
-                )
-            elif args.toot:
-                post_ids["mastodon"] = send_toot(
-                    post_text, num_screenshots, entry_details
-                )
-            elif args.skeet:
-                post_ids["bluesky"] = send_skeet(
-                    post_text, num_screenshots, entry_details
-                )
-            else:
-                post_ids["twitter"] = send_tweet(
-                    post_text, num_screenshots, entry_details
-                )
-                post_ids["mastodon"] = send_toot(
-                    post_text, num_screenshots, entry_details
-                )
-                post_ids["bluesky"] = send_skeet(
-                    post_text, num_screenshots, entry_details
-                )
-
+            post_ids = make_posts(post_text, num_screenshots, entry_details)
             result = update_entry_with_social_ids(args.entry_id, post_ids)
-            print("Entry updated:")
-            print(result)
+            print_results(result)
         else:
             print("Exiting without posting.")
     else:
