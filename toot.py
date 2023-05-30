@@ -50,4 +50,4 @@ def send_toot(post_text, num_screenshots, entry_details):
     # Send tweet
     print("Sending toot.")
     toot = api.status_post(post_text, media_ids=media_ids)
-    return toot["id"]
+    return str(toot["id"])
