@@ -16,4 +16,5 @@ def update_entry_with_social_ids(entry_id, post_ids):
         function_url,
         json={"entryId": entry_id, **post_ids},
     )
+    resp.raise_for_status()
     return resp.json()

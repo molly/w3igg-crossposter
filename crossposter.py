@@ -10,9 +10,14 @@ from skeet import send_skeet
 import argparse
 import json
 import os.path
+import re
 import subprocess
 
 ANSI = {"GREEN": "\033[92m", "YELLOW": "\033[93m", "ENDC": "\033[0m"}
+ZWSP = "\u200B"
+URL_REGEX = re.compile(
+    r"[a-z](\.)[a-z]", flags=re.IGNORECASE
+)  # This is a naive regex in that it doesn't check if it's a legit TLD, but it should serve the purpose
 
 
 def cleanup():
@@ -24,6 +29,20 @@ def cleanup():
     else:
         # Create the output directory if it's missing
         os.mkdir(OUTPUT_DIR)
+
+
+def format_post_title(post_title):
+    title_result = post_title
+    match = re.search(URL_REGEX, title_result)
+    while match:
+        title_result = (
+            title_result[: match.regs[1][0]]
+            + ZWSP
+            + title_result[match.regs[1][0] : match.regs[1][1]]
+            + title_result[match.regs[1][1] :]
+        )
+        match = re.search(URL_REGEX, title_result)
+    return title_result
 
 
 def make_posts(post_text, num_screenshots, entry_details):
@@ -50,10 +69,11 @@ def print_results(results):
         print("✅ Posted without errors:")
 
     for service in SERVICES:
-        if results[service] == "Success":
-            print("✅ " + service)
-        else:
-            print("⚠️" + results["service"])
+        if service in results:
+            if result[service] == "Success":
+                print("✅ " + service)
+            else:
+                print("⚠️" + results[service])
 
 
 if __name__ == "__main__":
@@ -110,7 +130,7 @@ if __name__ == "__main__":
             entry_details = stored["entry_details"]
 
     if entry_details:
-        post_text = f"{entry_details['title']}\n\n{entry_details['date']}\n{entry_details['url']}"
+        post_text = f"{format_post_title(entry_details['title'])}\n\n{entry_details['date']}\n{entry_details['url']}"
 
         if args.no_confirm:
             print("Skipping confirmation step.")
