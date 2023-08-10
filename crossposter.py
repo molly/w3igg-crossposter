@@ -45,14 +45,14 @@ def format_post_title(post_title):
     return title_result
 
 
-def make_posts(post_text, num_screenshots, entry_details):
+def make_posts(post_text, num_screenshots, entry_details, tweet, toot, skeet):
     post_ids = {}
 
-    if args.tweet:
+    if tweet:
         post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
-    elif args.toot:
+    elif toot:
         post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
-    elif args.skeet:
+    elif skeet:
         post_ids["bluesky"] = send_skeet(post_text, num_screenshots, entry_details)
     else:
         post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
@@ -70,10 +70,83 @@ def print_results(results):
 
     for service in SERVICES:
         if service in results:
-            if result[service] == "Success":
+            if results[service] == "Success":
                 print("✅ " + service)
             else:
                 print("⚠️" + results[service])
+
+
+def crosspost(
+    entry_id=None,
+    no_confirm=False,
+    use_prev=False,
+    tweet=False,
+    toot=False,
+    skeet=False,
+):
+    num_screenshots = None
+    entry_details = None
+    driver = None
+
+    if entry_id is None:
+        print("Entry ID required.")
+    else:
+        try:
+            if not use_prev:
+                # Clear out output directory and fetch new data and screenshots
+                cleanup()
+
+                driver = get_driver()
+                entry = get_entry(driver, entry_id)
+
+                if entry is not None:
+                    screenshot_splits = get_screenshot(entry)
+                    num_screenshots = len(screenshot_splits)
+                    entry_details = get_entry_details(entry, screenshot_splits)
+                    with open(
+                        os.path.join(OUTPUT_DIR, "entry.json"), "w+"
+                    ) as json_file:
+                        json.dump(
+                            {
+                                "num_screenshots": num_screenshots,
+                                "entry_details": entry_details,
+                            },
+                            json_file,
+                        )
+            else:
+                # Use existing stored data and screenshots without fetch
+                with open(os.path.join(OUTPUT_DIR, "entry.json"), "r") as json_file:
+                    stored = json.load(json_file)
+                    num_screenshots = stored["num_screenshots"]
+                    entry_details = stored["entry_details"]
+
+            if entry_details:
+                post_text = f"{format_post_title(entry_details['title'])}\n\n{entry_details['date']}\n{entry_details['url']}"
+
+                if no_confirm:
+                    print("Skipping confirmation step.")
+                    confirm = True
+                else:
+                    confirm = False
+                    # Open output directory to confirm images
+                    subprocess.call(["open", "-R", OUTPUT_DIR])
+                    print("=" * 20 + "\n" + post_text + "\n" + "=" * 20 + "\n\n")
+                    confirm = input("Ready to post? [y/n] ").lower()
+                    confirm = True if confirm == "y" else False
+
+                if confirm:
+                    post_ids = make_posts(
+                        post_text, num_screenshots, entry_details, tweet, toot, skeet
+                    )
+                    result = update_entry_with_social_ids(entry_id, post_ids)
+                    print_results(result)
+                else:
+                    print("Exiting without posting.")
+            else:
+                print(f"Entry with ID {entry_id} not found.")
+        finally:
+            if driver is not None:
+                driver.quit()
 
 
 if __name__ == "__main__":
@@ -98,59 +171,4 @@ if __name__ == "__main__":
     service_group.add_argument("--toot", action="store_true")
     service_group.add_argument("--skeet", action="store_true")
     args = parser.parse_args()
-
-    num_screenshots = None
-    entry_details = None
-    driver = None
-
-    try:
-        if not args.use_prev:
-            # Clear out output directory and fetch new data and screenshots
-            cleanup()
-
-            driver = get_driver()
-            entry = get_entry(driver, args.entry_id)
-
-            if entry is not None:
-                screenshot_splits = get_screenshot(entry)
-                num_screenshots = len(screenshot_splits)
-                entry_details = get_entry_details(entry, screenshot_splits)
-                with open(os.path.join(OUTPUT_DIR, "entry.json"), "w+") as json_file:
-                    json.dump(
-                        {
-                            "num_screenshots": num_screenshots,
-                            "entry_details": entry_details,
-                        },
-                        json_file,
-                    )
-        else:
-            # Use existing stored data and screenshots without fetch
-            with open(os.path.join(OUTPUT_DIR, "entry.json"), "r") as json_file:
-                stored = json.load(json_file)
-                num_screenshots = stored["num_screenshots"]
-                entry_details = stored["entry_details"]
-
-        if entry_details:
-            post_text = f"{format_post_title(entry_details['title'])}\n\n{entry_details['date']}\n{entry_details['url']}"
-
-            if args.no_confirm:
-                print("Skipping confirmation step.")
-                confirm = True
-            else:
-                confirm = False
-                # Open output directory to confirm images
-                subprocess.call(["open", "-R", OUTPUT_DIR])
-                print("=" * 20 + "\n" + post_text + "\n" + "=" * 20 + "\n\n")
-                confirm = input("Ready to post? [y/n] ").lower()
-                confirm = True if confirm == "y" else False
-
-            if confirm:
-                post_ids = make_posts(post_text, num_screenshots, entry_details)
-                result = update_entry_with_social_ids(args.entry_id, post_ids)
-                print_results(result)
-            else:
-                print("Exiting without posting.")
-        else:
-            print(f"Entry with ID {args.entry_id} not found.")
-    finally:
-        driver.quit()
+    crosspost(**vars(args))
