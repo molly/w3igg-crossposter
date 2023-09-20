@@ -127,7 +127,6 @@ def crosspost(
                     print("Skipping confirmation step.")
                     confirm = True
                 else:
-                    confirm = False
                     # Open output directory to confirm images
                     subprocess.call(["open", "-R", OUTPUT_DIR])
                     print("=" * 20 + "\n" + post_text + "\n" + "=" * 20 + "\n\n")

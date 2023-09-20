@@ -37,27 +37,31 @@ def send_tweet(post_text, num_screenshots, entry_details):
         entry_details: Object containing title, url, date, and array of entry text
 
     Returns:
-        String containing ID of the tweet that was just posted.
+        String containing ID of the tweet that was just posted, or None if the post fails.
     """
-    (client, api) = authenticate()
+    try:
+        (client, api) = authenticate()
 
-    # Upload screenshots
-    media_ids = []
-    for ind in range(num_screenshots):
-        print(f"Uploading Twitter image {ind}")
-        resp = api.media_upload(
-            os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
-        )
+        # Upload screenshots
+        media_ids = []
+        for ind in range(num_screenshots):
+            print(f"Uploading Twitter image {ind}")
+            resp = api.media_upload(
+                os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
+            )
 
-        # Add alt text to the image that was just uploaded
-        alt_text = entry_details["entry_text"][ind]
-        if ind == 0:
-            alt_text = entry_details["title"] + "\n" + alt_text
-        api.create_media_metadata(resp.media_id, alt_text[:TWITTER_ALT_TEXT_LIMIT])
+            # Add alt text to the image that was just uploaded
+            alt_text = entry_details["entry_text"][ind]
+            if ind == 0:
+                alt_text = entry_details["title"] + "\n" + alt_text
+            api.create_media_metadata(resp.media_id, alt_text[:TWITTER_ALT_TEXT_LIMIT])
 
-        media_ids.append(resp.media_id)
+            media_ids.append(resp.media_id)
 
-    # Send tweet
-    print("Sending tweet")
-    tweet = client.create_tweet(text=post_text, user_auth=True, media_ids=media_ids)
-    return tweet.data["id"]
+        # Send tweet
+        print("Sending tweet")
+        tweet = client.create_tweet(text=post_text, user_auth=True, media_ids=media_ids)
+        return tweet.data["id"]
+    except Exception as e:
+        print(e)
+        return None

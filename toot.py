@@ -27,27 +27,32 @@ def send_toot(post_text, num_screenshots, entry_details):
         entry_details: Object containing title, url, date, and array of entry text
 
     Returns:
-        String containing ID of the toot that was just posted.
+        String containing ID of the toot that was just posted, or None if the post fails.
     """
-    api = authenticate()
+    try:
+        api = authenticate()
 
-    # Upload screenshots
-    media_ids = []
-    for ind in range(num_screenshots):
-        print(f"Uploading Mastodon image {ind}")
-        # Get alt text for this image
-        alt_text = entry_details["entry_text"][ind]
-        if ind == 0:
-            alt_text = entry_details["title"] + "\n" + alt_text
+        # Upload screenshots
+        media_ids = []
+        for ind in range(num_screenshots):
+            print(f"Uploading Mastodon image {ind}")
+            # Get alt text for this image
+            alt_text = entry_details["entry_text"][ind]
+            if ind == 0:
+                alt_text = entry_details["title"] + "\n" + alt_text
 
-        resp = api.media_post(
-            os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png"),
-            description=alt_text[:MASTODON_ALT_TEXT_LIMIT],
-            focus=(0, -1),  # Set focus to center top of post
-        )
-        media_ids.append(resp.id)
+            resp = api.media_post(
+                os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png"),
+                description=alt_text[:MASTODON_ALT_TEXT_LIMIT],
+                focus=(0, -1),  # Set focus to center top of post
+            )
+            media_ids.append(resp.id)
 
-    # Send tweet
-    print("Sending toot.")
-    toot = api.status_post(post_text, media_ids=media_ids)
-    return str(toot["id"])
+        # Send tweet
+        print("Sending toot.")
+        toot = api.status_post(post_text, media_ids=media_ids)
+        return str(toot["id"])
+
+    except Exception as e:
+        print(e)
+        return None
