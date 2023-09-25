@@ -27,7 +27,10 @@ def authenticate():
 
 @retry(
     stop=stop_after_attempt(3),
-    retry=retry_if_exception_type(requests.exceptions.ChunkedEncodingError),
+    retry=(
+        retry_if_exception_type(requests.exceptions.Timeout)
+        | retry_if_exception_type(requests.exceptions.ChunkedEncodingError)
+    ),
 )
 def upload_blob(ind, headers):
     """Try to upload an image. This is prone to errors, so retry a few times if needed.
@@ -47,6 +50,7 @@ def upload_blob(ind, headers):
             BLUESKY_BASE_URL + "/com.atproto.repo.uploadBlob",
             data=image,
             headers={**headers, "Content-Type": "image/png"},
+            timeout=(5, 20),
         )
         blob = resp.json().get("blob")
         return blob
