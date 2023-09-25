@@ -26,6 +26,7 @@ six==1.16.0
 sniffio==1.3.0
 sortedcontainers==2.4.0
 soupsieve==2.5
+tenacity==8.2.3
 trio==0.22.2
 trio-websocket==0.10.4
 tweepy==4.14.0

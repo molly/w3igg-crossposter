@@ -1,5 +1,6 @@
 from constants import *
 from secrets import *
+from tenacity import retry, stop_after_attempt, retry_if_exception_type
 
 from datetime import datetime, timezone
 import requests
@@ -24,6 +25,33 @@ def authenticate():
     return jwt, did
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    retry=retry_if_exception_type(requests.exceptions.ChunkedEncodingError),
+)
+def upload_blob(ind, headers):
+    """Try to upload an image. This is prone to errors, so retry a few times if needed.
+
+    Args:
+        ind: Index of the image to try to upload
+        headers: HTTP headers to include in the request.
+
+    Returns:
+        Blob to send along with the post to attach the image.
+    """
+    with open(
+        os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png"), "rb"
+    ) as image_file:
+        image = image_file.read()
+        resp = requests.post(
+            BLUESKY_BASE_URL + "/com.atproto.repo.uploadBlob",
+            data=image,
+            headers={**headers, "Content-Type": "image/png"},
+        )
+        blob = resp.json().get("blob")
+        return blob
+
+
 def send_skeet(post_text, num_screenshots, entry_details):
     """
     Create and send the skeet for this entry.
@@ -45,17 +73,8 @@ def send_skeet(post_text, num_screenshots, entry_details):
         blobs = []
         for ind in range(num_screenshots):
             print(f"Uploading Bluesky image {ind}")
-            with open(
-                os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png"), "rb"
-            ) as image_file:
-                image = image_file.read()
-                resp = requests.post(
-                    BLUESKY_BASE_URL + "/com.atproto.repo.uploadBlob",
-                    data=image,
-                    headers={**headers, "Content-Type": "image/png"},
-                )
-                blob = resp.json().get("blob")
-                blobs.append(blob)
+            blob = upload_blob(ind, headers)
+            blobs.append(blob)
 
         iso_timestamp = datetime.now(timezone.utc).isoformat()
         iso_timestamp = (
