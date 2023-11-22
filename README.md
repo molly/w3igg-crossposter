@@ -1,7 +1,7 @@
 # w3igg-crossposter
 
 Automate crossposting web3isgoinggreat.com posts to social media. The tool captures a screenshot of the specified post,
-splits it into up to three segments if the post is long, and then posts to Twitter, Mastodon, and/or Bluesky.
+splits it into up to three segments if the post is long, and then posts to Twitter, Mastodon, Bluesky, and/or Instagram.
 
 ## Usage
 
@@ -20,6 +20,7 @@ Mutually exclusive optional flags:
 - `--tweet`: Only post to Twitter
 - `--toot`: Only post to Mastodon
 - `--skeet`: Only post to Bluesky
+- `--insta`: Only post to Instagram
 
 ## Secrets
 
@@ -36,6 +37,9 @@ MASTODON_PASSWORD = ""
 
 BLUESKY_USERNAME = ""
 BLUESKY_PASSWORD = ""
+
+INSTAGRAM_USERNAME = ""
+INSTAGRAM_PASSWORD = ""
 ```
 
 It also requires a `mastodon.secret` file generated via [this
