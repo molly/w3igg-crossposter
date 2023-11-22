@@ -6,6 +6,7 @@ from update_entry import update_entry_with_social_ids
 from toot import send_toot
 from tweet import send_tweet
 from skeet import send_skeet
+from insta import send_instagram
 
 import argparse
 import json
@@ -45,7 +46,7 @@ def format_post_title(post_title):
     return title_result
 
 
-def make_posts(post_text, num_screenshots, entry_details, tweet, toot, skeet):
+def make_posts(post_text, num_screenshots, entry_details, tweet, toot, skeet, insta):
     post_ids = {}
 
     if tweet:
@@ -54,10 +55,17 @@ def make_posts(post_text, num_screenshots, entry_details, tweet, toot, skeet):
         post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
     elif skeet:
         post_ids["bluesky"] = send_skeet(post_text, num_screenshots, entry_details)
+    elif insta:
+        post_ids["instagram"] = send_instagram(
+            post_text, num_screenshots, entry_details
+        )
     else:
         post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
         post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
         post_ids["bluesky"] = send_skeet(post_text, num_screenshots, entry_details)
+        post_ids["instagram"] = send_instagram(
+            post_text, num_screenshots, entry_details
+        )
 
     return post_ids
 
@@ -83,6 +91,7 @@ def crosspost(
     tweet=False,
     toot=False,
     skeet=False,
+    insta=False,
 ):
     num_screenshots = None
     entry_details = None
@@ -135,7 +144,13 @@ def crosspost(
 
                 if confirm:
                     post_ids = make_posts(
-                        post_text, num_screenshots, entry_details, tweet, toot, skeet
+                        post_text,
+                        num_screenshots,
+                        entry_details,
+                        tweet,
+                        toot,
+                        skeet,
+                        insta,
                     )
                     result = update_entry_with_social_ids(entry_id, post_ids)
                     print_results(result)
@@ -169,5 +184,6 @@ if __name__ == "__main__":
     service_group.add_argument("--tweet", action="store_true")
     service_group.add_argument("--toot", action="store_true")
     service_group.add_argument("--skeet", action="store_true")
+    service_group.add_argument("--insta", action="store_true")
     args = parser.parse_args()
     crosspost(**vars(args))
