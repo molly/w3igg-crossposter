@@ -6,6 +6,7 @@ from selenium.common.exceptions import NoSuchElementException
 
 from PIL import Image
 
+import logging
 import os
 
 
@@ -51,7 +52,7 @@ def get_screenshot(entry):
         )
 
     # Grab screenshot
-    print("Capturing screenshot")
+    logging.debug("Capturing screenshot")
     screenshot_path = os.path.join(OUTPUT_DIR, "screenshot.png")
     entry.screenshot(screenshot_path)
 
@@ -65,7 +66,7 @@ def get_screenshot(entry):
 
     splits.append({"y": entry_with_margin.height})
     if len(splits) > 1:
-        print(f"Splitting screenshot into target {num_segments} segments.")
+        logging.debug(f"Splitting screenshot into target {num_segments} segments.")
         last_crop = 0
         for ind, split in enumerate(splits):
             filename = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")

@@ -3,8 +3,9 @@ from secrets import *
 from tenacity import retry, stop_after_attempt, retry_if_exception_type
 
 from datetime import datetime, timezone
-import requests
+import logging
 import os
+import requests
 
 
 def authenticate():
@@ -76,7 +77,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
         # Upload screenshots
         blobs = []
         for ind in range(num_screenshots):
-            print(f"Uploading Bluesky image {ind}")
+            logging.debug(f"Uploading Bluesky image {ind}")
             blob = upload_blob(ind, headers)
             blobs.append(blob)
 
@@ -122,7 +123,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
             },
         }
 
-        print("Sending skeet")
+        logging.info("Sending skeet")
         resp = requests.post(
             BLUESKY_BASE_URL + "/com.atproto.repo.createRecord",
             json=post_data,

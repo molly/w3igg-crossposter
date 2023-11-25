@@ -1,15 +1,18 @@
 from constants import *
-from entry import get_driver, get_entry, get_entry_details
+from entry import get_entry, get_entry_details
 from screenshotter import get_screenshot
 from update_entry import update_entry_with_social_ids
+from webdriver import get_driver
 
 from toot import send_toot
 from tweet import send_tweet
 from skeet import send_skeet
 from insta import send_instagram
+from threads import send_threads
 
 import argparse
 import json
+import logging
 import os.path
 import re
 import subprocess
@@ -46,7 +49,17 @@ def format_post_title(post_title):
     return title_result
 
 
-def make_posts(post_text, num_screenshots, entry_details, tweet, toot, skeet, insta):
+def make_posts(
+    post_text,
+    num_screenshots,
+    entry_details,
+    driver,
+    tweet,
+    toot,
+    skeet,
+    insta,
+    threads,
+):
     post_ids = {}
 
     if tweet:
@@ -59,6 +72,10 @@ def make_posts(post_text, num_screenshots, entry_details, tweet, toot, skeet, in
         post_ids["instagram"] = send_instagram(
             post_text, num_screenshots, entry_details
         )
+    elif threads:
+        post_ids["threads"] = send_threads(
+            post_text, num_screenshots, entry_details, driver
+        )
     else:
         post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
         post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
@@ -66,22 +83,25 @@ def make_posts(post_text, num_screenshots, entry_details, tweet, toot, skeet, in
         post_ids["instagram"] = send_instagram(
             post_text, num_screenshots, entry_details
         )
+        post_ids["threads"] = send_threads(
+            post_text, num_screenshots, entry_details, driver
+        )
 
     return post_ids
 
 
 def print_results(results):
     if results["error"]:
-        print("⚠️ Posted with errors:")
+        logging.error("⚠️ Posted with errors:")
     else:
-        print("✅ Posted without errors:")
+        logging.info("✅ Posted without errors:")
 
     for service in SERVICES:
         if service in results:
             if results[service] == "Success":
-                print("✅ " + service)
+                logging.info("✅ " + service)
             else:
-                print("⚠️" + results[service])
+                logging.error("⚠️" + results[service])
 
 
 def crosspost(
@@ -92,6 +112,7 @@ def crosspost(
     toot=False,
     skeet=False,
     insta=False,
+    threads=False,
 ):
     num_screenshots = None
     entry_details = None
@@ -133,7 +154,7 @@ def crosspost(
                 post_text = f"{format_post_title(entry_details['title'])}\n\n{entry_details['date']}\n{entry_details['url']}"
 
                 if no_confirm:
-                    print("Skipping confirmation step.")
+                    logging.debug("Skipping confirmation step.")
                     confirm = True
                 else:
                     # Open output directory to confirm images
@@ -147,10 +168,12 @@ def crosspost(
                         post_text,
                         num_screenshots,
                         entry_details,
+                        driver,
                         tweet,
                         toot,
                         skeet,
                         insta,
+                        threads,
                     )
                     result = update_entry_with_social_ids(entry_id, post_ids)
                     print_results(result)
@@ -185,5 +208,6 @@ if __name__ == "__main__":
     service_group.add_argument("--toot", action="store_true")
     service_group.add_argument("--skeet", action="store_true")
     service_group.add_argument("--insta", action="store_true")
+    service_group.add_argument("--threads", action="store_true")
     args = parser.parse_args()
     crosspost(**vars(args))

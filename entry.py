@@ -1,24 +1,11 @@
+import logging
+
 from constants import *
 
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
-
-
-def get_driver():
-    """Get the driver with requisite options already set.
-
-    Returns:
-        Configured WebDriver instance.
-    """
-    options = webdriver.FirefoxOptions()
-    options.add_argument("--headless")
-    options.set_preference("layout.css.devPixelsPerPx", str(SCALING_FACTOR))
-    driver = webdriver.Firefox(options=options, service_log_path="/dev/null")
-    driver.set_window_size(600, 5000)
-    return driver
 
 
 def get_entry(driver, entry_id):
@@ -39,7 +26,9 @@ def get_entry(driver, entry_id):
             )
         )
     except TimeoutException:
-        print("Element with id '{}' not found or page timed out.".format(entry_id))
+        logging.error(
+            "Element with id '{}' not found or page timed out.".format(entry_id)
+        )
     else:
         driver.execute_script("document.body.style.zoom = '200%'")
         entry = driver.find_element(By.CLASS_NAME, "timeline-description")

@@ -1,7 +1,8 @@
 # w3igg-crossposter
 
 Automate crossposting web3isgoinggreat.com posts to social media. The tool captures a screenshot of the specified post,
-splits it into up to three segments if the post is long, and then posts to Twitter, Mastodon, Bluesky, and/or Instagram.
+splits it into up to three segments if the post is long, and then posts to Twitter, Mastodon, Bluesky, Instagram,
+and/or Threads.
 
 ## Usage
 
@@ -21,6 +22,7 @@ Mutually exclusive optional flags:
 - `--toot`: Only post to Mastodon
 - `--skeet`: Only post to Bluesky
 - `--insta`: Only post to Instagram
+- `--threads`: Only post to Threads
 
 ## Secrets
 

@@ -1,3 +1,4 @@
+import logging
 import os
 from constants import *
 from instagrapi import Client
@@ -63,9 +64,11 @@ def send_instagram(post_text, num_screenshots, entry_details):
                     "custom_accessibility_caption": entry_details["entry_text"][0]
                 },
             )
+            logging.info("Sending Instagram post (one image)")
 
         else:
             media = client.album_upload(images, post_text)
+            logging.info("Sending Instagram post (multiple images)")
 
         return media.code
     except Exception as e:
