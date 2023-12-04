@@ -15,6 +15,8 @@ optional flags:
 
 - `--no-confirm`: Skip the confirmation step, which previews the post text and prompts you to check the screenshot(s)
   that will be posted
+- `--use-prev`: Use screenshots and post information stored from a past run
+- `--debug`: Show more verbose debug messages
 
 Mutually exclusive optional flags:
 
@@ -47,3 +49,5 @@ INSTAGRAM_PASSWORD = ""
 It also requires a `mastodon.secret` file generated via [this
 process](https://mastodonpy.readthedocs.io/en/stable/#usage), and a `gcp-secret.secret` GCP Service Account key file for
 a Service Account with Cloud Functions Invoker access to the `addSocialPostIds` cloud function.
+
+Posting on Threads uses the same credentials as Instagram.
