@@ -21,6 +21,7 @@ def get_screenshot(entry):
          Array with split information (y coordinate of split, and number of paragraphs included in each split).
     """
 
+    logger = logging.getLogger(__name__)
     image_bottom = None
     splits = []
     num_segments = None
@@ -52,7 +53,7 @@ def get_screenshot(entry):
         )
 
     # Grab screenshot
-    logging.debug("Capturing screenshot")
+    logger.debug("Capturing screenshot")
     screenshot_path = os.path.join(OUTPUT_DIR, "screenshot.png")
     entry.screenshot(screenshot_path)
 
@@ -66,7 +67,7 @@ def get_screenshot(entry):
 
     splits.append({"y": entry_with_margin.height})
     if len(splits) > 1:
-        logging.debug(f"Splitting screenshot into target {num_segments} segments.")
+        logger.debug(f"Splitting screenshot into target {num_segments} segments.")
         last_crop = 0
         for ind, split in enumerate(splits):
             filename = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")

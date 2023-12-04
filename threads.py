@@ -8,7 +8,9 @@ from webdriver import get_driver
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import (
+    TimeoutException,
+)
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -17,6 +19,7 @@ ALT_TEXT_BUTTONS_XPATH = "//div[@role='button'][.//span[text()='Alt']]"
 CONTENT_EDITABLE_DIV_XPATH = "//div[@contenteditable='true']"
 LEXICAL_TEXT_SPAN_XPATH = "//span[@data-lexical-text='true']"
 POST_BUTTON_XPATH = "//div[@role='button'][.//div[text()='Post']]"
+VIEW_BUTTON_XPATH = "//a[text()='View']"
 
 
 def send_threads(post_text, num_screenshots, entry_details, driver):
@@ -32,6 +35,7 @@ def send_threads(post_text, num_screenshots, entry_details, driver):
     Returns:
         String containing ID of the Threads post that was just posted, or None if the post fails.
     """
+    logger = logging.getLogger(__name__)
     driver = get_driver(headless=False, screenshot_resolution=False)
     driver.get(THREADS_URL)
     try:
@@ -41,7 +45,8 @@ def send_threads(post_text, num_screenshots, entry_details, driver):
             )
         )
     except TimeoutException:
-        logging.error("Threads page didn't load within ten seconds.")
+        logger.error("Threads page didn't load within ten seconds.")
+        driver.quit()
 
     else:
         # Open post modal
@@ -62,7 +67,8 @@ def send_threads(post_text, num_screenshots, entry_details, driver):
                 )
             )
         except TimeoutException:
-            logging.error("Threads post modal didn't load within ten seconds.")
+            logger.error("Threads post modal didn't load within ten seconds.")
+            driver.quit()
         else:
             # Grab a reference to the post button to use later
             post_button = driver.find_element(By.XPATH, POST_BUTTON_XPATH)
@@ -70,7 +76,6 @@ def send_threads(post_text, num_screenshots, entry_details, driver):
             # Attach screenshot files
             media_upload_input = driver.find_element(By.XPATH, FILE_INPUT_XPATH)
             for ind in range(num_screenshots):
-                print("Round " + str(ind))
                 # Attach image
                 filename = os.path.abspath(
                     os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
@@ -128,4 +133,26 @@ def send_threads(post_text, num_screenshots, entry_details, driver):
                 )
             )
 
+            # Click post button
+            # There is a hidden post button under the modal that is disabled, so we need the additional selector here
+            # to avoid trying to click that one
+            post_button = driver.find_element(
+                By.XPATH,
+                "//div[@role='button' and not(@aria-disabled='true')][.//div[text()='Post']]",
+            )
             post_button.click()
+
+            # Wait for post to send, then get its ID
+            WebDriverWait(driver, 20).until(
+                expected_conditions.visibility_of_element_located(
+                    (By.XPATH, VIEW_BUTTON_XPATH)
+                )
+            )
+            view_button = driver.find_element(By.XPATH, VIEW_BUTTON_XPATH)
+            href = view_button.get_attribute("href")
+            post_id = href.split("/")[-1]
+
+            # Clean up and return post ID
+            driver.quit()
+            return post_id
+    return None

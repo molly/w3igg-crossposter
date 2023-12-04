@@ -91,23 +91,25 @@ def make_posts(
 
 
 def print_results(results):
+    logger = logging.getLogger(__name__)
     if results["error"]:
-        logging.error("⚠️ Posted with errors:")
+        logger.error("⚠️ Posted with errors:")
     else:
-        logging.info("✅ Posted without errors:")
+        logger.info("✅ Posted without errors:")
 
     for service in SERVICES:
         if service in results:
             if results[service] == "Success":
-                logging.info("✅ " + service)
+                logger.info("✅ " + service)
             else:
-                logging.error("⚠️" + results[service])
+                logger.error("⚠️" + results[service])
 
 
 def crosspost(
     entry_id=None,
     no_confirm=False,
     use_prev=False,
+    debug=False,
     tweet=False,
     toot=False,
     skeet=False,
@@ -117,6 +119,15 @@ def crosspost(
     num_screenshots = None
     entry_details = None
     driver = None
+    logger = logging.getLogger(__name__)
+    sh = logging.StreamHandler()
+    if debug:
+        logger.setLevel(logging.DEBUG)
+        sh.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+        sh.setLevel(logging.INFO)
+    logger.addHandler(sh)
 
     if entry_id is None:
         print("Entry ID required.")
@@ -154,7 +165,7 @@ def crosspost(
                 post_text = f"{format_post_title(entry_details['title'])}\n\n{entry_details['date']}\n{entry_details['url']}"
 
                 if no_confirm:
-                    logging.debug("Skipping confirmation step.")
+                    logger.debug("Skipping confirmation step.")
                     confirm = True
                 else:
                     # Open output directory to confirm images
@@ -201,6 +212,9 @@ if __name__ == "__main__":
         action="store_true",
         help="Use screenshots and post information from previous run without re-fetching",
     )
+    parser.add_argument(
+        "--debug", action="store_true", help="Print verbose debugging information"
+    )
 
     # Option to only post to one of the services
     service_group = parser.add_mutually_exclusive_group()
@@ -210,4 +224,5 @@ if __name__ == "__main__":
     service_group.add_argument("--insta", action="store_true")
     service_group.add_argument("--threads", action="store_true")
     args = parser.parse_args()
+
     crosspost(**vars(args))

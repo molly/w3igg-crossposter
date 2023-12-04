@@ -40,13 +40,14 @@ def send_tweet(post_text, num_screenshots, entry_details):
     Returns:
         String containing ID of the tweet that was just posted, or None if the post fails.
     """
+    logger = logging.getLogger(__name__)
     try:
         (client, api) = authenticate()
 
         # Upload screenshots
         media_ids = []
         for ind in range(num_screenshots):
-            logging.debug(f"Uploading Twitter image {ind}")
+            logger.debug(f"Uploading Twitter image {ind}")
             resp = api.media_upload(
                 os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
             )
@@ -60,7 +61,7 @@ def send_tweet(post_text, num_screenshots, entry_details):
             media_ids.append(resp.media_id)
 
         # Send tweet
-        logging.info("Sending tweet")
+        logger.info("Sending tweet")
         tweet = client.create_tweet(text=post_text, user_auth=True, media_ids=media_ids)
         return tweet.data["id"]
     except Exception as e:

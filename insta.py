@@ -28,10 +28,33 @@ def convert_images(num_screenshots):
         List of screenshot paths.
     """
     paths = []
+    force_aspect_ratio = (
+        num_screenshots > 1
+    )  # When there are multiple images, the images will be cropped if the aspect ratios differ
+    tallest_height = 0
+
+    # Get height of tallest screenshot
+    if force_aspect_ratio:
+        for ind in range(num_screenshots):
+            png_path = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
+            image = Image.open(png_path)
+            width, height = image.size
+            if height > tallest_height:
+                tallest_height = height
+
     for ind in range(num_screenshots):
         png_path = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
         jpg_path = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".jpg")
         image = Image.open(png_path)
+        if force_aspect_ratio:
+            original_width, original_height = image.size
+            if original_height < tallest_height:
+                canvas = Image.new(
+                    "RGBA", (original_width, tallest_height), (238, 238, 238, 255)
+                )  # Canvas with light grey background in target size
+                offset = 0, int(round(tallest_height - original_height) / 2)
+                canvas.paste(image, offset)
+                image = canvas
         rgb = image.convert("RGB")  # Discard transparency
         rgb.save(jpg_path)
         paths.append(jpg_path)
@@ -50,7 +73,7 @@ def send_instagram(post_text, num_screenshots, entry_details):
     Returns:
         String containing ID of the Instagram post that was just posted, or None if the post fails.
     """
-
+    logger = logging.getLogger(__name__)
     try:
         images = convert_images(num_screenshots)
 
@@ -64,11 +87,17 @@ def send_instagram(post_text, num_screenshots, entry_details):
                     "custom_accessibility_caption": entry_details["entry_text"][0]
                 },
             )
-            logging.info("Sending Instagram post (one image)")
+            logger.info("Sending Instagram post (one image)")
 
         else:
-            media = client.album_upload(images, post_text)
-            logging.info("Sending Instagram post (multiple images)")
+            media = client.album_upload(
+                images,
+                post_text,
+                extra_data={
+                    "custom_accessibility_caption": entry_details["entry_text"][0]
+                },
+            )
+            logger.info("Sending Instagram post (multiple images)")
 
         return media.code
     except Exception as e:

@@ -69,7 +69,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
     Returns:
         String containing ID of the skeet that was just posted, or None if the post fails.
     """
-
+    logger = logging.getLogger(__name__)
     try:
         (jwt, did) = authenticate()
         headers = {"Authorization": "Bearer " + jwt}
@@ -77,7 +77,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
         # Upload screenshots
         blobs = []
         for ind in range(num_screenshots):
-            logging.debug(f"Uploading Bluesky image {ind}")
+            logger.debug(f"Uploading Bluesky image {ind}")
             blob = upload_blob(ind, headers)
             blobs.append(blob)
 
@@ -123,7 +123,7 @@ def send_skeet(post_text, num_screenshots, entry_details):
             },
         }
 
-        logging.info("Sending skeet")
+        logger.info("Sending skeet")
         resp = requests.post(
             BLUESKY_BASE_URL + "/com.atproto.repo.createRecord",
             json=post_data,

@@ -30,13 +30,14 @@ def send_toot(post_text, num_screenshots, entry_details):
     Returns:
         String containing ID of the toot that was just posted, or None if the post fails.
     """
+    logger = logging.getLogger(__name__)
     try:
         api = authenticate()
 
         # Upload screenshots
         media_ids = []
         for ind in range(num_screenshots):
-            logging.debug(f"Uploading Mastodon image {ind}")
+            logger.debug(f"Uploading Mastodon image {ind}")
             # Get alt text for this image
             alt_text = entry_details["entry_text"][ind]
             if ind == 0:
@@ -50,7 +51,7 @@ def send_toot(post_text, num_screenshots, entry_details):
             media_ids.append(resp.id)
 
         # Send tweet
-        logging.info("Sending toot.")
+        logger.info("Sending toot.")
         toot = api.status_post(post_text, media_ids=media_ids)
         return str(toot["id"])
 

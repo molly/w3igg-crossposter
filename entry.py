@@ -18,6 +18,7 @@ def get_entry(driver, entry_id):
     Returns:
         WebElement corresponding to the entry, or None if the entry can't be found.
     """
+    logger = logging.getLogger(__name__)
     driver.get(W3IGG_URL + "/single/" + entry_id)
     try:
         WebDriverWait(driver, 10).until(
@@ -26,7 +27,7 @@ def get_entry(driver, entry_id):
             )
         )
     except TimeoutException:
-        logging.error(
+        logger.error(
             "Element with id '{}' not found or page timed out.".format(entry_id)
         )
     else:
