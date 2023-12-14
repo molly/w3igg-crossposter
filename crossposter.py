@@ -73,9 +73,7 @@ def make_posts(
             post_text, num_screenshots, entry_details
         )
     elif threads:
-        post_ids["threads"] = send_threads(
-            post_text, num_screenshots, entry_details, driver
-        )
+        post_ids["threads"] = send_threads(post_text, num_screenshots, entry_details)
     else:
         post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
         post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
@@ -83,9 +81,7 @@ def make_posts(
         post_ids["instagram"] = send_instagram(
             post_text, num_screenshots, entry_details
         )
-        post_ids["threads"] = send_threads(
-            post_text, num_screenshots, entry_details, driver
-        )
+        post_ids["threads"] = send_threads(post_text, num_screenshots, entry_details)
 
     return post_ids
 

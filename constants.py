@@ -20,4 +20,6 @@ MASTODON_ALT_TEXT_LIMIT = 1500
 BLUESKY_BASE_URL = "https://bsky.social/xrpc"
 BLUESKY_ALT_TEXT_LIMIT = 1000
 
-SERVICES = ["twitter", "mastodon", "bluesky"]
+THREADS_ALT_TEXT_LIMIT = 1000
+
+SERVICES = ["twitter", "mastodon", "bluesky", "instagram", "threads"]
