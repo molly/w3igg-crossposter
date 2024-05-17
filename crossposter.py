@@ -51,9 +51,9 @@ def format_post_title(post_title):
 
 def make_posts(
     post_text,
+    url,
     num_screenshots,
     entry_details,
-    driver,
     tweet,
     toot,
     skeet,
@@ -61,27 +61,39 @@ def make_posts(
     threads,
 ):
     post_ids = {}
-
+    post_text_with_url = f"{post_text}\n{url}"
     if tweet:
-        post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
+        post_ids["twitter"] = send_tweet(post_text, url, num_screenshots, entry_details)
     elif toot:
-        post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
+        post_ids["mastodon"] = send_toot(
+            post_text_with_url, num_screenshots, entry_details
+        )
     elif skeet:
-        post_ids["bluesky"] = send_skeet(post_text, num_screenshots, entry_details)
+        post_ids["bluesky"] = send_skeet(
+            post_text_with_url, num_screenshots, entry_details
+        )
     elif insta:
         post_ids["instagram"] = send_instagram(
-            post_text, num_screenshots, entry_details
+            post_text_with_url, num_screenshots, entry_details
         )
     elif threads:
-        post_ids["threads"] = send_threads(post_text, num_screenshots, entry_details)
-    else:
-        post_ids["twitter"] = send_tweet(post_text, num_screenshots, entry_details)
-        post_ids["mastodon"] = send_toot(post_text, num_screenshots, entry_details)
-        post_ids["bluesky"] = send_skeet(post_text, num_screenshots, entry_details)
-        post_ids["instagram"] = send_instagram(
-            post_text, num_screenshots, entry_details
+        post_ids["threads"] = send_threads(
+            post_text_with_url, num_screenshots, entry_details
         )
-        post_ids["threads"] = send_threads(post_text, num_screenshots, entry_details)
+    else:
+        post_ids["twitter"] = send_tweet(post_text, url, num_screenshots, entry_details)
+        post_ids["mastodon"] = send_toot(
+            post_text_with_url, num_screenshots, entry_details
+        )
+        post_ids["bluesky"] = send_skeet(
+            post_text_with_url, num_screenshots, entry_details
+        )
+        post_ids["instagram"] = send_instagram(
+            post_text_with_url, num_screenshots, entry_details
+        )
+        post_ids["threads"] = send_threads(
+            post_text_with_url, num_screenshots, entry_details
+        )
 
     return post_ids
 
@@ -158,7 +170,7 @@ def crosspost(
                     entry_details = stored["entry_details"]
 
             if entry_details:
-                post_text = f"{format_post_title(entry_details['title'])}\n\n{entry_details['date']}\n{entry_details['url']}"
+                post_text = f"{format_post_title(entry_details['title'])}\n\n{entry_details['date']}"
 
                 if no_confirm:
                     logger.debug("Skipping confirmation step.")
@@ -173,9 +185,9 @@ def crosspost(
                 if confirm:
                     post_ids = make_posts(
                         post_text,
+                        entry_details["url"],
                         num_screenshots,
                         entry_details,
-                        driver,
                         tweet,
                         toot,
                         skeet,

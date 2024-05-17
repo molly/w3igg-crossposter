@@ -28,12 +28,13 @@ def authenticate():
     return client, api
 
 
-def send_tweet(post_text, num_screenshots, entry_details):
+def send_tweet(post_text, url, num_screenshots, entry_details):
     """
     Create and send the tweet for this entry.
 
     Args:
         post_text: Text to post as the tweet contents.
+        url: W3IGG URL for the entry.
         num_screenshots: Number of screenshots to be attached.
         entry_details: Object containing title, url, date, and array of entry text
 
@@ -63,6 +64,9 @@ def send_tweet(post_text, num_screenshots, entry_details):
         # Send tweet
         logger.info("Sending tweet")
         tweet = client.create_tweet(text=post_text, user_auth=True, media_ids=media_ids)
+        client.create_tweet(
+            text=url, user_auth=True, in_reply_to_tweet_id=tweet.data["id"]
+        )
         return tweet.data["id"]
     except Exception as e:
         print(e)
