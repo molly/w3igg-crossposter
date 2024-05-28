@@ -32,6 +32,9 @@ def get_entry(driver, entry_id):
         )
     else:
         driver.execute_script("document.body.style.zoom = '200%'")
+        driver.execute_script(
+            "document.querySelector('.timeline-icon').style.display = 'none'"
+        )
         entry = driver.find_element(By.CLASS_NAME, "timeline-description")
         return entry
 

@@ -73,9 +73,13 @@ def get_screenshot(entry):
             filename = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
             cp = entry_with_margin.copy()
             cp = cp.crop((0, last_crop, entry_with_margin.width, split["y"]))
+            cp = cp.resize((int(cp.width * 0.75), int(cp.height * 0.75)))
             cp.save(filename)
             last_crop = split["y"]
     else:
+        entry_with_margin = entry_with_margin.resize(
+            (int(entry_with_margin.width * 0.75), int(entry_with_margin.height * 0.75))
+        )
         entry_with_margin.save(os.path.join(OUTPUT_DIR, FILENAME_ROOT + "0.png"))
 
     os.remove(screenshot_path)  # Clean up intermediate file that's not needed anymore
