@@ -131,8 +131,6 @@ def send_skeet(post_text, num_screenshots, entry_details):
         )
 
         # Grab just the post ID without the full URI
-        j = resp.json()
-
         return resp.json()["uri"].split("/")[-1]
 
     except Exception as e:

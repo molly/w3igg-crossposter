@@ -51,7 +51,7 @@ def send_threads(post_text, num_screenshots, entry_details):
     else:
         # Open post modal
         create_button = driver.find_element(
-            By.XPATH, "//header//nav[.//*[name()='svg'][@aria-label='Create']]"
+            By.XPATH, "//div[@role='button'][.//*[name()='svg'][@aria-label='Create']]"
         )
         create_button.click()
 
@@ -144,7 +144,7 @@ def send_threads(post_text, num_screenshots, entry_details):
                 # to avoid trying to click that one
                 post_button = driver.find_element(
                     By.XPATH,
-                    "//div[@role='button' and not(@aria-disabled='true')][.//div[text()='Post']]",
+                    "//div[@role='dialog']//div[@role='button'][.//div[text()='Post']]",
                 )
                 post_button.click()
 
