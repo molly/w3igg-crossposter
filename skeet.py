@@ -1,4 +1,5 @@
 from constants import *
+from PIL import Image
 from secrets import *
 from tenacity import retry, stop_after_attempt, retry_if_exception_type
 
@@ -43,9 +44,8 @@ def upload_blob(ind, headers):
     Returns:
         Blob to send along with the post to attach the image.
     """
-    with open(
-        os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png"), "rb"
-    ) as image_file:
+    image_path = os.path.join(OUTPUT_DIR, FILENAME_ROOT + str(ind) + ".png")
+    with open(image_path, "rb") as image_file:
         image = image_file.read()
         resp = requests.post(
             BLUESKY_BASE_URL + "/com.atproto.repo.uploadBlob",
@@ -54,7 +54,13 @@ def upload_blob(ind, headers):
             timeout=(5, 20),
         )
         blob = resp.json().get("blob")
-        return blob
+
+        # Get image aspect ratio
+        with Image.open(image_path) as pil_image:
+            width, height = pil_image.size
+            aspect_ratio = {"width": width, "height": height}
+
+        return blob, aspect_ratio
 
 
 def send_skeet(post_text, num_screenshots, entry_details):
@@ -76,10 +82,12 @@ def send_skeet(post_text, num_screenshots, entry_details):
 
         # Upload screenshots
         blobs = []
+        ratios = []
         for ind in range(num_screenshots):
             logger.debug(f"Uploading Bluesky image {ind}")
-            blob = upload_blob(ind, headers)
+            blob, ratio = upload_blob(ind, headers)
             blobs.append(blob)
+            ratios.append(ratio)
 
         iso_timestamp = datetime.now(timezone.utc).isoformat()
         iso_timestamp = (
@@ -92,7 +100,13 @@ def send_skeet(post_text, num_screenshots, entry_details):
             alt_text = entry_details["entry_text"][ind]
             if ind == 0:
                 alt_text = entry_details["title"] + "\n" + alt_text
-            images.append({"image": blob, "alt": alt_text[:BLUESKY_ALT_TEXT_LIMIT]})
+            images.append(
+                {
+                    "image": blob,
+                    "alt": alt_text[:BLUESKY_ALT_TEXT_LIMIT],
+                    "aspectRatio": ratios[ind],
+                }
+            )
 
         # Create rich text information to turn the W3IGG URL into a clickable link
         post_text_bytes = bytes(post_text, "utf-8")
@@ -130,6 +144,9 @@ def send_skeet(post_text, num_screenshots, entry_details):
             headers=headers,
         )
 
+        if resp.status_code != 200:
+            logger.error(f"Failed to post skeet: {resp.status_code} {resp.text}")
+            return None
         # Grab just the post ID without the full URI
         return resp.json()["uri"].split("/")[-1]
 
