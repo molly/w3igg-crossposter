@@ -31,7 +31,7 @@ def get_entry(driver, entry_id):
             "Element with id '{}' not found or page timed out.".format(entry_id)
         )
     else:
-        driver.execute_script("document.body.style.zoom = '200%'")
+        driver.execute_script("document.body.style.zoom = '150%'")
         driver.execute_script(
             "document.querySelector('.timeline-icon').style.display = 'none'"
         )

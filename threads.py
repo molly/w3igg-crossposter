@@ -36,7 +36,7 @@ def send_threads(post_text, num_screenshots, entry_details):
         String containing ID of the Threads post that was just posted, or None if the post fails.
     """
     logger = logging.getLogger(__name__)
-    driver = get_driver(headless=True, screenshot_resolution=False)
+    driver = get_driver(headless=False, screenshot_resolution=False)
     driver.get(THREADS_URL)
     try:
         WebDriverWait(driver, 10).until(

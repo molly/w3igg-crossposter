@@ -13,8 +13,11 @@ def authenticate():
     Returns:
         Authenticated Mastodon client.
     """
-    api = Mastodon(client_id="mastodon.secret")
-    api.log_in(MASTODON_EMAIL, MASTODON_PASSWORD, to_file="mastodon_user.secret")
+    api = Mastodon(
+        api_base_url="https://indieweb.social/",
+        client_secret=MASTODON_CLIENT_SECRET,
+        access_token=MASTODON_ACCESS_TOKEN,
+    )
     return api
 
 

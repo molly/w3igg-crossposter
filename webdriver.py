@@ -20,5 +20,5 @@ def get_driver(headless=True, screenshot_resolution=True):
         options.set_preference("ui.textScaleFactor", 100)
     driver = webdriver.Firefox(options=options)
     if screenshot_resolution:
-        driver.set_window_size(800, 5000)
+        driver.set_window_size(1200, 5000)
     return driver
